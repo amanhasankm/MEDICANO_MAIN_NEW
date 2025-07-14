@@ -1,15 +1,11 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from streamlit_extras.let_it_rain import rain
+import os
 import time
 
-# Set page config FIRST
-st.set_page_config(
-    page_title="Medicano",
-    page_icon="💊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Set page config
+st.set_page_config(page_title="Medicano", page_icon="💊", layout="wide", initial_sidebar_state="expanded")
 
 # Import internal modules
 import Blogs, Home, Alternatives, DiagnoseDisease, MedicineInformation, NearbyPharmacies, Ambulance, About_Contact
@@ -18,9 +14,7 @@ from DiabetesChecker.app import app as DiabetesCheckerApp
 from auth import register_user, login_user
 from MedicalDocumentVault.app import app as MedicalDocumentVaultApp
 
-
-
-# ---------------- Session Setup ----------------
+# Session state initialization
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
@@ -33,10 +27,11 @@ if "popup_message" not in st.session_state:
 # ---------------- Header ----------------
 st.markdown("<h1 style='text-align: center;'>💊 Welcome to <span style='color:#4a4aff;'>Medicano</span></h1>", unsafe_allow_html=True)
 
-# ---------------- Login / Register Section ----------------
+# ---------------- Login / Register ----------------
 if not st.session_state.logged_in:
     tab1, tab2 = st.tabs(["🔐 Login", "📝 Register"])
 
+    # --- Login Tab ---
     with tab1:
         st.markdown("### 👤 Login to your account")
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -51,12 +46,18 @@ if not st.session_state.logged_in:
                 if success:
                     st.session_state.logged_in = True
                     st.session_state.username = user["username"]
+
+                    # ✅ Create user folder if not exists
+                    user_folder = os.path.join("uploaded_docs", st.session_state.username)
+                    os.makedirs(user_folder, exist_ok=True)
+
                     st.success("🎉 Login successful!")
                     rain(emoji="💊", font_size=30, falling_speed=5, animation_length="medium")
                     st.rerun()
                 else:
-                    st.error("❌ Invalid credentials. Please try again.")
+                    st.error("❌ Invalid credentials.")
 
+    # --- Register Tab ---
     with tab2:
         st.markdown("### 🆕 Create a new account")
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -64,11 +65,11 @@ if not st.session_state.logged_in:
             new_username = st.text_input("👤 Username", key="reg_username", placeholder="Choose a username")
             new_email = st.text_input("📧 Email", key="reg_email", placeholder="Enter your email")
             new_password = st.text_input("🔐 Password", type="password", key="reg_password", placeholder="Create a password")
-            confirm_password = st.text_input("🔐 Confirm Password", type="password", key="reg_confirm", placeholder="Re-enter your password")
+            confirm_password = st.text_input("🔐 Confirm Password", type="password", key="reg_confirm", placeholder="Re-enter password")
 
             if st.button("✅ Register"):
                 if new_password != confirm_password:
-                    st.warning("⚠️ Passwords do not match!")
+                    st.warning("⚠️ Passwords do not match.")
                 elif len(new_password) < 6:
                     st.warning("⚠️ Password should be at least 6 characters.")
                 else:
@@ -80,7 +81,7 @@ if not st.session_state.logged_in:
                     else:
                         st.error("❌ " + msg)
 
-# ---------------- Show Registration Success Pop-up ----------------
+# ---------------- Registration Success Popup ----------------
 if st.session_state.popup_shown:
     st.markdown(f"""
         <style>
@@ -89,34 +90,17 @@ if st.session_state.popup_shown:
                 color: white;
                 border-radius: 10px;
                 padding: 20px;
-                font-size: 16px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
                 position: fixed;
                 top: 40%;
                 left: 50%;
                 transform: translate(-50%, -40%);
+                text-align: center;
                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            }}
-            .popup button {{
-                background-color: #fff;
-                color: #4CAF50;
-                border: none;
-                padding: 10px 20px;
-                margin-top: 10px;
-                cursor: pointer;
-                font-size: 14px;
-                border-radius: 5px;
-            }}
-            .popup button:hover {{
-                background-color: #e0e0e0;
             }}
         </style>
         <div class="popup">
             <h3>{st.session_state.popup_message}</h3>
-            <p>Please click below to log in.</p>
-            <button onclick="window.location.href='?popup_shown=False';">Login Now</button>
+            <p>Please login from the Login tab.</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -124,7 +108,7 @@ if st.session_state.popup_shown:
     st.session_state.popup_shown = False
     st.experimental_rerun()
 
-# ---------------- Load App if Logged In ----------------
+# ---------------- Load App If Logged In ----------------
 if st.session_state.logged_in:
 
     class MultiApp:
@@ -145,19 +129,18 @@ if st.session_state.logged_in:
                     st.session_state.username = ""
                     st.rerun()
 
-                # Updated icons list with document icon for Document Vault
                 app_title = option_menu(
                     menu_title='Medicano',
                     options=titles,
                     icons=['house-fill', 'heart-pulse', 'capsule', 'info-circle', 'journal-text',
-                           'geo-alt', 'exclamation-triangle-fill', 'bell', 'activity', 'info-square-fill','file-earmark-text'],
+                           'geo-alt', 'exclamation-triangle-fill', 'bell', 'activity', 'info-square-fill', 'file-earmark-text'],
                     menu_icon='chat-text-fill',
                     default_index=0,
                     styles={
                         "container": {"padding": "5!important", "background-color": 'white'},
                         "icon": {"color": "black", "font-size": "23px"},
-                        "nav-link": {"color": "black", "font-size": "20px", "text-align": "left", "margin": "0px"},
-                        "nav-link-selected": {"background-color": "white"}
+                        "nav-link": {"color": "black", "font-size": "20px", "text-align": "left"},
+                        "nav-link-selected": {"background-color": "#f0f0f0"}
                     }
                 )
 
@@ -165,7 +148,7 @@ if st.session_state.logged_in:
             if selected_app:
                 selected_app['function']()
 
-    # Initialize and Add Apps
+    # Register all app pages
     Medical = MultiApp()
     Medical.add_apps("Home", Home.Homes.app)
     Medical.add_apps("Diagnose Disease", lambda: DiagnoseDisease.Diagnose().app())
@@ -177,6 +160,6 @@ if st.session_state.logged_in:
     Medical.add_apps("Emergency Ambulance", lambda: Ambulance.AmbulanceFinder().app())
     Medical.add_apps("Pill Reminder", PillRemainderApp)
     Medical.add_apps("About&Contact", lambda: About_Contact.app())
-    Medical.add_apps("Health Records", MedicalDocumentVaultApp)  # ✅ Using file icon
+    Medical.add_apps("Health Records", MedicalDocumentVaultApp)
 
     Medical.run()
