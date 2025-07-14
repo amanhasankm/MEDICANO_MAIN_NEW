@@ -1,0 +1,13 @@
+streamlit==1.36.0
+python-dotenv==1.0.1
+ai71==0.0.18
+streamlit-option-menu==0.3.13
+pymongo==4.11.3
+twilio==9.5.1
+bcrypt==4.3.0
+streamlit_extras==0.6.0
+joblib==1.4.2
+scikit-learn
+opencv-python==4.11.0.86 
+opencv-python-headless==4.11.0.86
+pdfkit==1.0.0
